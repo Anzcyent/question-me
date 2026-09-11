@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "../components/Toast";
 import LoadingOverlay from "../components/LoadingOverlay";
+import { API_BASE } from "../api";
 
 function Quiz({ token }) {
   const { quizId } = useParams();
@@ -15,7 +16,7 @@ function Quiz({ token }) {
   const [confirmModal, setConfirmModal] = useState({ open: false, message: "" });
 
   useEffect(() => {
-    fetch(`/api/quiz/${quizId}`, {
+    fetch(`${API_BASE}/api/quiz/${quizId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -65,7 +66,7 @@ function Quiz({ token }) {
     setConfirmModal({ open: false, message: "" });
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/quiz/${quizId}/submit`, {
+      const res = await fetch(`${API_BASE}/api/quiz/${quizId}/submit`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

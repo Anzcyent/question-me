@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import GoogleButton from "../components/GoogleButton";
+import { API_BASE } from "../api";
 
 const rules = [
   { test: (v) => v.length >= 8, label: "En az 8 karakter" },
@@ -39,7 +40,7 @@ function Register() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/register", {
+      const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),

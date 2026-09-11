@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import LoadingOverlay from "../components/LoadingOverlay";
 import { useToast } from "../components/Toast";
+import { API_BASE } from "../api";
 
 function Dashboard({ token, user }) {
   const [pdfs, setPdfs] = useState([]);
@@ -19,7 +20,7 @@ function Dashboard({ token, user }) {
   const toast = useToast();
 
   useEffect(() => {
-    fetch("/api/pdf", {
+    fetch(`${API_BASE}/api/pdf`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -104,13 +105,13 @@ function Dashboard({ token, user }) {
       setGenerating(false);
     });
 
-    xhr.open("POST", "/api/pdf/upload");
+    xhr.open("POST", `${API_BASE}/api/pdf/upload`);
     xhr.setRequestHeader("Authorization", `Bearer ${token}`);
     xhr.send(formData);
   };
 
   const createQuizForPdf = async (pdfId, prefs = {}) => {
-    const res = await fetch(`/api/quiz/generate/${pdfId}`, {
+    const res = await fetch(`${API_BASE}/api/quiz/generate/${pdfId}`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -146,7 +147,7 @@ function Dashboard({ token, user }) {
     if (!deleteModal.pdfId) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/pdf/${deleteModal.pdfId}`, {
+      const res = await fetch(`${API_BASE}/api/pdf/${deleteModal.pdfId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { API_BASE } from "../api";
 
 function VerifyEmailSent() {
   const [searchParams] = useSearchParams();
@@ -21,7 +22,7 @@ function VerifyEmailSent() {
     setResendMsg("");
     setResendError("");
     try {
-      const res = await fetch("/api/auth/resend", {
+      const res = await fetch(`${API_BASE}/api/auth/resend`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),

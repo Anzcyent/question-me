@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import GoogleButton from "../components/GoogleButton";
+import { API_BASE } from "../api";
 
 function Login({ login }) {
   const [email, setEmail] = useState("");
@@ -27,7 +28,7 @@ function Login({ login }) {
     setResendMsg("");
 
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -52,7 +53,7 @@ function Login({ login }) {
     setResendLoading(true);
     setResendMsg("");
     try {
-      const res = await fetch("/api/auth/resend", {
+      const res = await fetch(`${API_BASE}/api/auth/resend`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: target }),

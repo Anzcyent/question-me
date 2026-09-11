@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { API_BASE } from "../api";
 
 const rules = [
   { test: (v) => v.length >= 8, label: "En az 8 karakter" },
@@ -32,7 +33,7 @@ function ResetPassword() {
     }
 
     try {
-      const res = await fetch("/api/auth/reset-password", {
+      const res = await fetch(`${API_BASE}/api/auth/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, password }),

@@ -1,6 +1,8 @@
+import { API_BASE } from "../api";
+
 function GoogleButton({ text = "Google ile Giriş" }) {
   const handleClick = () => {
-    window.location.href = "/api/auth/google";
+    window.location.href = `${API_BASE}/api/auth/google`;
   };
 
   return (

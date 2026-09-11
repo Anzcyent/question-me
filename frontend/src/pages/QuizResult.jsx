@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { API_BASE } from "../api";
 
 function QuizResult({ token }) {
   const { quizId } = useParams();
@@ -8,7 +9,7 @@ function QuizResult({ token }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/quiz/${quizId}`, {
+    fetch(`${API_BASE}/api/quiz/${quizId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())

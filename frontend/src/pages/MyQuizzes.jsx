@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import LoadingOverlay from "../components/LoadingOverlay";
 import { useToast } from "../components/Toast";
+import { API_BASE } from "../api";
 
 function MyQuizzes({ token }) {
   const [quizzes, setQuizzes] = useState([]);
@@ -12,7 +13,7 @@ function MyQuizzes({ token }) {
   const toast = useToast();
 
   useEffect(() => {
-    fetch("/api/quiz", {
+    fetch(`${API_BASE}/api/quiz`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -27,7 +28,7 @@ function MyQuizzes({ token }) {
     if (!deleteModal.quizId) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/quiz/${deleteModal.quizId}`, {
+      const res = await fetch(`${API_BASE}/api/quiz/${deleteModal.quizId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
