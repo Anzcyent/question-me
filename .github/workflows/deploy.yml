@@ -39,7 +39,7 @@ jobs:
         working-directory: frontend
         run: npm run build
         env:
-          VITE_API_URL: ""
+          VITE_API_URL: "https://question-me-backend.onrender.com"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
