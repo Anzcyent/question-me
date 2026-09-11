@@ -41,6 +41,11 @@ npm run dev
 
 Tarayıcıda `http://localhost:3000` adresini aç.
 
+## Deploy
+
+- **Frontend:** [GitHub Pages](https://anzcyent.github.io/question-me/)
+- **Backend:** [Render](https://question-me-backend.onrender.com)
+
 ## Notlar
 - MONGODB_URI ve JWT_SECRET `backend/.env` dosyasında tanımlıdır.
 - Google Gemini API anahtarı olmadan quiz oluşturma çalışmaz.
