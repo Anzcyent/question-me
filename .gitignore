@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env
+uploads/*
+!uploads/.gitkeep
+backend_out.txt
+backend_err.txt
