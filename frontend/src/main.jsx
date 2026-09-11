@@ -4,22 +4,18 @@ import App from "./App";
 import "./App.css";
 
 // GitHub Pages SPA redirect handler
-(function () {
-  var redirect = sessionStorage.redirect;
-  delete sessionStorage.redirect;
-  if (redirect && redirect !== location.href) {
-    history.replaceState(null, null, redirect);
+(function (l) {
+  if (l.search[1] === "/") {
+    var decoded = l.search
+      .slice(1)
+      .split("&")
+      .map(function (s) {
+        return s.replace(/~and~/g, "&");
+      })
+      .join("?");
+    window.history.replaceState(null, null, l.pathname.slice(0, -1) + decoded + l.hash);
   }
-})();
-
-// 404.html redirect: read "?/path" query and restore
-(function () {
-  var l = window.location;
-  if (l.search && l.search.startsWith("?/")) {
-    var path = l.search.slice(1);
-    window.history.replaceState(null, null, path);
-  }
-})();
+})(window.location);
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
