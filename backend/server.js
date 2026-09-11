@@ -14,12 +14,16 @@ const app = express();
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   "http://localhost:3000",
-].filter(Boolean);
+]
+  .filter(Boolean)
+  .map((o) => {
+    try { return new URL(o).origin; } catch { return o; }
+  });
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.some((o) => origin.startsWith(o))) {
+      if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error("CORS not allowed"));
