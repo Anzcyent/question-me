@@ -8,14 +8,14 @@ const router = express.Router();
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-const models = ["gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.5-flash"];
+const models = ["gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash"];
 
 function getModel(name) {
   return genAI.getGenerativeModel({
     model: name,
     generationConfig: {
-      temperature: 1.2,
-      topP: 0.95,
+      temperature: 0.8,
+      topP: 0.9,
       topK: 40,
       maxOutputTokens: 8000,
       responseMimeType: "application/json",
@@ -29,6 +29,26 @@ function getRandomSeed() {
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function validateQuestions(questions) {
+  if (!Array.isArray(questions)) return [];
+
+  return questions.filter((q, i) => {
+    if (!q || typeof q !== "object") return false;
+    if (!q.question || typeof q.question !== "string" || q.question.trim().length < 5) return false;
+
+    if (q.questionType === "multiple-choice") {
+      if (!Array.isArray(q.options) || q.options.length !== 4) return false;
+      const uniqueOptions = new Set(q.options.map((o) => String(o).trim().toLowerCase()));
+      if (uniqueOptions.size < 4) return false;
+      if (typeof q.correctAnswer !== "number" || q.correctAnswer < 0 || q.correctAnswer > 3) return false;
+    } else if (q.questionType === "written") {
+      if (!q.correctAnswerText || typeof q.correctAnswerText !== "string" || q.correctAnswerText.trim().length < 2) return false;
+    }
+
+    return true;
+  });
 }
 
 async function generateWithRetry(prompt, maxRetries = 2) {
@@ -69,7 +89,7 @@ router.post("/generate/:pdfId", auth, async (req, res) => {
     console.log("PDF bulundu, text uzunluğu:", pdf.text.length);
 
     const { difficulty, questionCount, customPrompt, questionType } = req.body || {};
-    const truncatedText = pdf.text.substring(0, 4000);
+    const truncatedText = pdf.text.substring(0, 10000);
     const qType = ["multiple-choice", "written", "mixed"].includes(questionType) ? questionType : "multiple-choice";
 
     let difficultyText = "";
@@ -104,18 +124,40 @@ router.post("/generate/:pdfId", auth, async (req, res) => {
       formatExample = `[{"questionType":"multiple-choice","question":"soru1","options":["A","B","C","D"],"correctAnswer":0},{"questionType":"written","question":"soru2","options":[],"correctAnswer":null,"correctAnswerText":"cevap2"}]`;
     }
 
-    const prompt = `Sen bir quiz oluşturma asistanısın. (Benzersiz quiz #${uniqueId}) Aşağıdaki kurallara ve kullanıcının özel isteklerine MUTLAKA uy.
+    const prompt = `Sen profesyonel bir eğitim içeriği uzmanısın. Aşağıdaki metinden yüksek kaliteli quiz soruları oluştur.
 
-TEMEL KURALLAR:
-- Verilen metinden tam olarak ${count} tane soru oluştur.
+BENZERSIZ QUIZ #${uniqueId}
+
+=====================================
+KALİTE STANDARTLARI (EN ÖNEMLİ KURAL):
+=====================================
+- Her soru SADECE verilen metne dayanmalıdır. Metinde olmayan bilgileri soru olarak KULLANMA.
+- Seçenekler birbirine yakın olmalı. "Hepsini biliyorum" veya "Hiçbiri" gibi bariz yanlış seçenekler EKLEME.
+- Doğru cevap, metne göre kesinlikle tartışmasız olmalı.
+- Her soru net ve anlaşılır olmalı, çift anlamlı ifadelerden kaçın.
+- Sadece metinde açıkça belirtilen veya güçlü bir şekilde ima edilen bilgileri sor.
+- Soruları basit tekrardan (doldurma, listeleme) ziyade ANLAMA ve UYGULAMA düzeyinde oluştur.
+
+=====================================
+SORU SAYISI VE FORMAT:
+=====================================
+- Tam olarak ${count} soru oluştur. Eksik veya fazla olmamalı.
 - ${typeInstructions}
-- Sadece JSON formatında yanıt ver. jsonArray formatında ${count} soru döndür.
+- Sadece JSON jsonArray formatında yanıt ver.
 - Format örneği: ${formatExample}
-- Tam olarak ${count} elemanlı bir JSON array döndür. Eksik veya fazla olmamalı.
-- ${randomInstruction}
-- Daha önce sorulmamış tamamen yeni sorular oluştur. Aynı soru kalıplarını tekrarlama.
 
+=====================================
+ZORLUK SEVİYESİ:
+=====================================
 ${difficultyText}
+
+=====================================
+ÇEŞİTLİLİK KURALLARI:
+=====================================
+- ${randomInstruction}
+- Aynı bilgiyi farklı açılardan sorgula. Örneğin: bir soru "nedir?" diye soruyorsa, diğeri "neden önemlidir?" veya "nasıl çalışır?" gibi farklı bir açıdan sorsun.
+- Soru kalıplarını tekrarlama. Her soru kendine özgü bir yapıya sahip olmalı.
+- Tüm konuları kapsa, sadece kolay veya sadece zor bölümlere odaklanma.
 
 DİL ÖĞRENİMİ / VOCABULARY KURALLARI:
 Eğer metin dil öğrenimi veya vocabulary/kelime odaklıysa:
@@ -125,17 +167,27 @@ Eğer metin dil öğrenimi veya vocabulary/kelime odaklıysa:
 - Metindeki kelimeleri alfabetik sıraya koyma, tamamen rastgele dağıt.
 
 ${customPrompt ? `
-=====================================
+====================================
 KULLANICININ ÖZEL İSTEKLERİ:
-Bu istekleri YUKARIDAKİ TÜM KURALLARDAN DAHA ÖNCELİKLİ tut ve MUTLAKA uygula:
+Bu istekleri TÜM diğer kurallardan DAHA ÖNCELİKLİ tut ve MUTLAKA uygula:
 ${customPrompt}
-=====================================
+====================================
 ` : ""}
 
 METİN İÇERİĞİ:
 ${truncatedText}
 
-YUKARIDAKİ TÜM KURALLARA VE ÖZEL İSTEKLERE UYARAK ${count} SORU OLUŞTUR.`;
+=====================================
+SON KONTROL LİSTESİ (cevaplamadan önce kontrol et):
+=====================================
+1. Toplam ${count} soru mu var?
+2. Her soru metne dayanıyor mu?
+3. Seçenekler birbirine yakın mı?
+4. Doğru cevap tartışmasız mı?
+5. Sorular birbirinden farklı mı?
+6. JSON formatı doğru mu?
+
+${count} SORU OLUŞTUR.`;
 
     console.log("Prompt uzunluğu:", prompt.length);
     console.log("Custom prompt:", customPrompt);
@@ -173,6 +225,18 @@ YUKARIDAKİ TÜM KURALLARA VE ÖZEL İSTEKLERE UYARAK ${count} SORU OLUŞTUR.`;
     }
     console.log("Quiz oluşturuldu, soru sayısı:", questions.length);
 
+    questions = validateQuestions(questions);
+    console.log("Doğrulama sonrası soru sayısı:", questions.length);
+
+    const seenQuestions = new Set();
+    questions = questions.filter((q) => {
+      const key = q.question.trim().toLowerCase();
+      if (seenQuestions.has(key)) return false;
+      seenQuestions.add(key);
+      return true;
+    });
+    console.log("Tekrar kontrolü sonrası soru sayısı:", questions.length);
+
     // AI eksik soru döndürürse tekrar dene (max 2 deneme)
     if (questions.length < count && questions.length > 0) {
       console.log(`AI ${count} soru istendi ama ${questions.length} döndürdü. Tekrar deneniyor...`);
@@ -185,6 +249,14 @@ YUKARIDAKİ TÜM KURALLARA VE ÖZEL İSTEKLERE UYARAK ${count} SORU OLUŞTUR.`;
         const retryQuestions = JSON.parse(retryCleaned);
         if (retryQuestions.length >= count) {
           questions = retryQuestions.slice(0, count);
+          questions = validateQuestions(questions);
+          const retrySeen = new Set();
+          questions = questions.filter((q) => {
+            const key = q.question.trim().toLowerCase();
+            if (retrySeen.has(key)) return false;
+            retrySeen.add(key);
+            return true;
+          });
           console.log("Tekrar deneme başarılı, soru sayısı:", questions.length);
         } else {
           console.log("Tekrar denemede de yeterli soru alınamadı, mevcut sorular kullanılıyor");
